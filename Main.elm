@@ -102,149 +102,134 @@ update outerMsg model =
 logsOf : Msg -> Date.Date -> Model -> List Log.Model
 logsOf msg date model =
     case msg of
-        WatchMsg watchMsg ->
+        WatchMsg Watch.TryAgain ->
+            model.logs ++ [ Log.warn date "Beginning new Device Flow" [] ]
+
+        WatchMsg Watch.Connect ->
+            model.logs
+                ++ [ Log.info date "User clicked connect" []
+                   , Log.info date
+                        "Making request to ARTIK Cloud"
+                        [ Log.Http "POST" (model.watch.baseUrl ++ "/device/code")
+                        , Log.Header "Content-Type" "application/json"
+                        , Log.Data <| Log.record [ Log.recordValue "client_id" model.watch.clientId ]
+                        ]
+                   ]
+
+        WatchMsg (Watch.ReceivedCodes (Result.Err httpError)) ->
+            model.logs ++ [ logHttpError date httpError ]
+
+        WatchMsg (Watch.ReceivedCodes (Result.Ok codes)) ->
             let
-                logs =
-                    case watchMsg of
-                        Watch.TryAgain ->
-                            [ Log.warn date "Beginning new Device Flow" [] ]
-
-                        Watch.Connect ->
-                            [ Log.info date "User clicked connect" []
-                            , Log.info date
-                                "Making request to ARTIK Cloud"
-                                [ Log.Http "POST" (model.watch.baseUrl ++ "/device/code")
-                                , Log.Header "Content-Type" "application/json"
-                                , Log.Data (Log.record [ Log.recordValue "client_id" model.watch.clientId ])
-                                ]
+                responseDetails =
+                    [ Log.Data <|
+                        Log.record
+                            [ Log.recordValue "device_code" codes.deviceCode
+                            , Log.recordValue "user_code" codes.userCode
+                            , Log.recordValue "verification_url" codes.verificationUrl
+                            , Log.recordValue "expires_in" (toString codes.expiresIn)
+                            , Log.recordValue "interval" (toString codes.interval)
                             ]
-
-                        Watch.ReceivedCodes result ->
-                            case result of
-                                Result.Ok codes ->
-                                    let
-                                        record =
-                                            Log.record
-                                                [ Log.recordValue "device_code" codes.deviceCode
-                                                , Log.recordValue "user_code" codes.userCode
-                                                , Log.recordValue "verification_url" codes.verificationUrl
-                                                , Log.recordValue "expires_in" (toString codes.expiresIn)
-                                                , Log.recordValue "interval" (toString codes.interval)
-                                                ]
-                                    in
-                                    [ Log.info date
-                                        "Received code response from AKC"
-                                        [ Log.Data record
-                                        , Log.Status 200
-                                        , Log.Header "Accept" "application/json, */*"
-                                        ]
-                                    , Log.warn date ("Setting up the polling interval to " ++ toString codes.interval ++ "sec") []
-                                    ]
-
-                                Result.Err httpError ->
-                                    [ logHttpError date httpError ]
-
-                        Watch.GetToken ->
-                            let
-                                code =
-                                    case model.watch.codes of
-                                        Just codes ->
-                                            codes.deviceCode
-
-                                        Nothing ->
-                                            "No code available"
-
-                                record =
-                                    Log.record
-                                        [ Log.recordValue "client_id" model.watch.clientId
-                                        , Log.recordValue "client_secret" model.watch.clientSecret
-                                        , Log.recordValue "code" code
-                                        , Log.recordValue "grant_type" "device_code"
-                                        ]
-                            in
-                            [ Log.info date "Device polling ARTIK Cloud for a token" []
-                            , Log.info date
-                                "Making request to ARTIK Cloud"
-                                [ Log.Http "POST" (model.watch.baseUrl ++ "/token")
-                                , Log.Header "Content-Type" "application/x-www-form-urlencoded"
-                                , Log.Data record
-                                ]
-                            ]
-
-                        Watch.ReceivedAuthorization result ->
-                            case result of
-                                Result.Ok resp ->
-                                    let
-                                        record =
-                                            Log.record
-                                                [ Log.recordValue "access_token" resp.accessToken
-                                                , Log.recordValue "refresh_token" resp.refreshToken
-                                                , Log.recordValue "expires_in" (toString resp.expiresIn)
-                                                , Log.recordValue "token_type" resp.tokenType
-                                                ]
-                                    in
-                                    [ Log.info date
-                                        "Received code response from AKC"
-                                        [ Log.Data record
-                                        , Log.Status 200
-                                        , Log.Header "Accept" "application/json, */*"
-                                        ]
-                                    ]
-
-                                Result.Err (Watch.SoftError name desc) ->
-                                    let
-                                        msg =
-                                            Maybe.map (\m -> "; description: `" ++ m ++ "`") desc |> Maybe.withDefault ""
-                                    in
-                                    [ Log.info date ("Soft Error `" ++ name ++ "`" ++ msg) [] ]
-
-                                Result.Err (Watch.HardError name desc httpErr) ->
-                                    let
-                                        msg =
-                                            Maybe.map (\m -> "; description: `" ++ m ++ "`") desc |> Maybe.withDefault ""
-                                    in
-                                    [ Log.error date ("Hard Error `" ++ name ++ "`" ++ msg) []
-                                    , logHttpError date httpErr
-                                    ]
-
-                        Watch.UpdateClientId newClientId ->
-                            let
-                                oldClientId =
-                                    model.watch.clientId
-                            in
-                            [ Log.warn date "Updating the client id" [ Log.ChangeValue oldClientId newClientId ] ]
-
-                        Watch.UpdateClientSecret newClientSecret ->
-                            let
-                                oldClientSecret =
-                                    model.watch.clientSecret
-                            in
-                            [ Log.warn date "Updating the client secret" [ Log.ChangeValue oldClientSecret newClientSecret ] ]
-
-                        Watch.UpdatePollingInterval newPollingInterval ->
-                            let
-                                oldPollingInterval =
-                                    model.watch.pollingInterval
-
-                                toS i =
-                                    toString i ++ "sec"
-
-                                details =
-                                    [ Log.ChangeValue (toS oldPollingInterval) (toS newPollingInterval) ]
-                            in
-                            [ Log.warn date "Updating the polling interval" details ]
-
-                        Watch.TogglePolling ->
-                            let
-                                message =
-                                    if model.watch.polling then
-                                        "Stopping AKC polling"
-                                    else
-                                        "Will poll AKC each " ++ toString model.watch.polling ++ " seconds"
-                            in
-                            [ Log.warn date message [] ]
+                    , Log.Status 200
+                    , Log.Header "Accept" "application/json, */*"
+                    ]
             in
-            model.logs ++ logs
+            model.logs
+                ++ [ Log.info date "Received code response from AKC" responseDetails
+                   , Log.warn date ("Setting up the polling interval to " ++ toString codes.interval ++ "sec") []
+                   ]
+
+        WatchMsg Watch.GetToken ->
+            let
+                code =
+                    Maybe.map .deviceCode model.watch.codes |> Maybe.withDefault "No code available"
+
+                details =
+                    [ Log.Http "POST" (model.watch.baseUrl ++ "/token")
+                    , Log.Header "Content-Type" "application/x-www-form-urlencoded"
+                    , Log.Data <|
+                        Log.record
+                            [ Log.recordValue "client_id" model.watch.clientId
+                            , Log.recordValue "client_secret" model.watch.clientSecret
+                            , Log.recordValue "code" code
+                            , Log.recordValue "grant_type" "device_code"
+                            ]
+                    ]
+            in
+            model.logs
+                ++ [ Log.info date "Device polling ARTIK Cloud for a token" []
+                   , Log.info date "Making request to ARTIK Cloud" details
+                   ]
+
+        WatchMsg (Watch.ReceivedAuthorization (Result.Ok resp)) ->
+            let
+                details =
+                    [ Log.Data <|
+                        Log.record
+                            [ Log.recordValue "access_token" resp.accessToken
+                            , Log.recordValue "refresh_token" resp.refreshToken
+                            , Log.recordValue "expires_in" (toString resp.expiresIn)
+                            , Log.recordValue "token_type" resp.tokenType
+                            ]
+                    , Log.Status 200
+                    , Log.Header "Accept" "application/json, */*"
+                    ]
+            in
+            model.logs ++ [ Log.info date "Received code response from AKC" details ]
+
+        WatchMsg (Watch.ReceivedAuthorization (Result.Err (Watch.SoftError name desc))) ->
+            let
+                msg =
+                    Maybe.map (\m -> "; description: `" ++ m ++ "`") desc |> Maybe.withDefault ""
+            in
+            model.logs ++ [ Log.info date ("Soft Error `" ++ name ++ "`" ++ msg) [] ]
+
+        WatchMsg (Watch.ReceivedAuthorization (Result.Err (Watch.HardError name desc httpErr))) ->
+            let
+                msg =
+                    Maybe.map (\m -> "; description: `" ++ m ++ "`") desc |> Maybe.withDefault ""
+            in
+            model.logs
+                ++ [ Log.error date ("Hard Error `" ++ name ++ "`" ++ msg) []
+                   , logHttpError date httpErr
+                   ]
+
+        WatchMsg (Watch.UpdateClientId newClientId) ->
+            let
+                oldClientId =
+                    model.watch.clientId
+            in
+            model.logs ++ [ Log.warn date "Updating the client id" [ Log.ChangeValue oldClientId newClientId ] ]
+
+        WatchMsg (Watch.UpdateClientSecret newClientSecret) ->
+            let
+                oldClientSecret =
+                    model.watch.clientSecret
+            in
+            model.logs ++ [ Log.warn date "Updating the client secret" [ Log.ChangeValue oldClientSecret newClientSecret ] ]
+
+        WatchMsg (Watch.UpdatePollingInterval newPollingInterval) ->
+            let
+                oldPollingInterval =
+                    model.watch.pollingInterval
+
+                toS i =
+                    toString i ++ "sec"
+
+                details =
+                    [ Log.ChangeValue (toS oldPollingInterval) (toS newPollingInterval) ]
+            in
+            model.logs ++ [ Log.warn date "Updating the polling interval" details ]
+
+        WatchMsg Watch.TogglePolling ->
+            let
+                message =
+                    if model.watch.polling then
+                        "Stopping AKC polling"
+                    else
+                        "Will poll AKC each " ++ toString model.watch.polling ++ " seconds"
+            in
+            model.logs ++ [ Log.warn date message [] ]
 
         NoOp ->
             []
@@ -295,19 +280,15 @@ logHttpError date err =
                 ]
 
         Http.BadStatus res ->
-            let
-                response =
-                    logResponse res
-            in
             Log.info date
                 "Received a response from AKC with a bad status code"
-                ([ Log.Header "Error" "BadStatus" ] ++ response)
+                ([ Log.Header "Error" "BadStatus" ] ++ logResponse res)
 
-        Http.BadPayload why res ->
+        Http.BadPayload reason res ->
             Log.info date
                 "Malformed response from AKC"
                 ([ Log.Header "Error" "BadPayload"
-                 , Log.Header "Reason" why
+                 , Log.Header "Reason" reason
                  ]
                     ++ logResponse res
                 )

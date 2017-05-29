@@ -96,25 +96,23 @@ update msg model =
             { model | state = Connecting }
                 ! [ fetchCodes model.baseUrl model.clientId ]
 
-        ReceivedCodes result ->
-            case result of
-                Result.Ok codes ->
-                    { model | codes = Just codes, state = WaitingAuthorization, pollingInterval = codes.interval } ! []
+        ReceivedCodes (Result.Ok codes) ->
+            { model | codes = Just codes, state = WaitingAuthorization, pollingInterval = codes.interval } ! []
 
-                Result.Err error ->
-                    let
-                        msg =
-                            case error of
-                                Http.BadPayload _ _ ->
-                                    "BadPayload"
+        ReceivedCodes (Result.Err error) ->
+            let
+                msg =
+                    case error of
+                        Http.BadPayload _ _ ->
+                            "BadPayload"
 
-                                Http.BadStatus _ ->
-                                    "BadStatus"
+                        Http.BadStatus _ ->
+                            "BadStatus"
 
-                                _ ->
-                                    toString error
-                    in
-                    { model | error = Just msg, state = Error } ! []
+                        _ ->
+                            toString error
+            in
+            { model | error = Just msg, state = Error } ! []
 
         GetToken ->
             case model.codes of
@@ -124,21 +122,17 @@ update msg model =
                 Nothing ->
                     model ! []
 
-        ReceivedAuthorization result ->
-            case result of
-                Result.Ok resp ->
-                    { model | state = Authorized, token = Just resp.accessToken } ! []
+        ReceivedAuthorization (Result.Ok resp) ->
+            { model | state = Authorized, token = Just resp.accessToken } ! []
 
-                Result.Err (SoftError error description) ->
-                    case error of
-                        "access_denied" ->
-                            { model | state = Denied } ! []
+        ReceivedAuthorization (Result.Err (SoftError "access_denied" _)) ->
+            { model | state = Denied } ! []
 
-                        _ ->
-                            model ! []
+        ReceivedAuthorization (Result.Err (SoftError _ _)) ->
+            model ! []
 
-                Result.Err (HardError error description _) ->
-                    { model | error = Just error, state = Error } ! []
+        ReceivedAuthorization (Result.Err (HardError error description _)) ->
+            { model | error = Just error, state = Error } ! []
 
         UpdateClientId clientId ->
             { model | clientId = clientId } ! []
