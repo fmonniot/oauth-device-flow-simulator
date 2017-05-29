@@ -5,7 +5,8 @@ import Watch
 
 
 type Msg
-    = WatchMsg Watch.Msg
+    = NoOp
+    | WatchMsg Watch.Msg
     | ResetAll
     | WithTime Date Msg
     | DisplayConfig

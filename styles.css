@@ -125,14 +125,11 @@ green     #859900
 
 */
 
-.log-container {
+#log-container {
     grid-area: log;
     display: block;
     font-family: monospace;
     white-space: pre;
-}
-
-.log-container {
     background-color: #002b36;
     color: #839496;
     white-space:pre-wrap;

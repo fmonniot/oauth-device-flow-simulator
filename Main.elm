@@ -2,6 +2,7 @@ module Main exposing (..)
 
 import Date
 import Dict
+import Dom.Scroll
 import Html exposing (Html, button, div, h1, input, li, program, span, text, ul)
 import Html.Attributes exposing (class, placeholder, value)
 import Html.Events exposing (onClick, onInput)
@@ -60,28 +61,37 @@ topBar =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update outerMsg model =
     case outerMsg of
+        NoOp ->
+            model ! []
+
         WithTime date msg ->
             let
                 logs =
                     logsOf msg date model
+
+                scrollToBottom =
+                    Task.attempt (\_ -> NoOp) (Dom.Scroll.toBottom "log-container")
             in
             case msg of
+                NoOp ->
+                    model ! []
+
                 WatchMsg watchMsg ->
                     let
                         ( updatedWatch, cmd ) =
                             Watch.update watchMsg model.watch
                     in
                     { model | watch = updatedWatch, logs = logs }
-                        ! [ Cmd.map WatchMsg cmd ]
+                        ! [ Cmd.map WatchMsg cmd, scrollToBottom ]
 
                 ResetAll ->
                     Tuple.mapFirst (\m -> { m | logs = logs }) init
 
                 DisplayConfig ->
-                    { model | logs = logs } ! []
+                    { model | logs = logs } ! [ scrollToBottom ]
 
                 WithTime _ _ ->
-                    { model | logs = logs } ! []
+                    { model | logs = logs } ! [ scrollToBottom ]
 
         msg ->
             ( model, Task.perform (\d -> WithTime d msg) Date.now )
@@ -222,6 +232,9 @@ logsOf msg date model =
                             [ Log.warn date message [] ]
             in
             model.logs ++ logs
+
+        NoOp ->
+            []
 
         ResetAll ->
             [ Log.warn date "Configuration reset" [] ]

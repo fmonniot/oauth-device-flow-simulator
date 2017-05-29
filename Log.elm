@@ -2,7 +2,7 @@ module Log exposing (KeyValue(..), Model, info, record, recordChildren, recordVa
 
 import Date
 import Html exposing (Html, br, button, div, h1, input, li, program, span, text, ul)
-import Html.Attributes exposing (class, placeholder)
+import Html.Attributes exposing (class, id, placeholder)
 import Messages exposing (Msg)
 
 
@@ -61,7 +61,7 @@ view logs =
         entries =
             List.map logEntry logs
     in
-    div [ class "log-container" ] entries
+    div [ id "log-container" ] entries
 
 
 logEntry : Model -> Html Msg

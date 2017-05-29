@@ -11,7 +11,7 @@
     [ ] Once Watch have been completed (see first point), add tabs to the Header to choose which OAuth flow to use
 [x] Add a "stop polling" checkbox to the Watch module
 [x] Consider having a "polling" checkbox instead of a "stop polling" one (inverse current behavior)
-[ ] Look if we can have a Log module which scroll automatically
+[x] Look if we can have a Log module which scroll automatically
     Appear we can by using `elm-lang/dom` (http://package.elm-lang.org/packages/elm-lang/dom/1.1.1/Dom-Scroll)
 [ ] Add documentation for the whole project
     [ ] Expose documentation for all modules in `elm-package.json`
