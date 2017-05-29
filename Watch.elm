@@ -1,4 +1,4 @@
-module Watch exposing (Model, Msg(..), State, init, subscriptions, update, view)
+module Watch exposing (Model, Msg(..), State, TokenError(..), init, subscriptions, update, view)
 
 import Html exposing (Html, br, button, div, h1, hr, input, label, li, program, span, text, ul)
 import Html.Attributes exposing (checked, class, placeholder, type_, value)
@@ -74,7 +74,7 @@ type Msg
     = Connect
     | ReceivedCodes (Result Http.Error Codes)
     | GetToken
-    | ReceivedAuthorization (Result Http.Error TokenResponse)
+    | ReceivedAuthorization (Result TokenError TokenResponse)
     | TryAgain
     | UpdateClientId String
     | UpdateClientSecret String
@@ -125,7 +125,20 @@ update msg model =
                     model ! []
 
         ReceivedAuthorization result ->
-            model ! []
+            case result of
+                Result.Ok resp ->
+                    { model | state = Authorized, token = Just resp.accessToken } ! []
+
+                Result.Err (SoftError error description) ->
+                    case error of
+                        "access_denied" ->
+                            { model | state = Denied } ! []
+
+                        _ ->
+                            model ! []
+
+                Result.Err (HardError error description _) ->
+                    { model | error = Just error, state = Error } ! []
 
         UpdateClientId clientId ->
             { model | clientId = clientId } ! []
@@ -200,13 +213,47 @@ tokenResponseDecoder =
         (Json.Decode.field "token_type" Json.Decode.string)
 
 
-type alias TokenError =
+type TokenError
+    = SoftError String (Maybe String)
+    | HardError String (Maybe String) Http.Error
+
+
+tokenErrorFromHttpError : Http.Error -> TokenError
+tokenErrorFromHttpError httpErr =
+    case httpErr of
+        Http.BadStatus resp ->
+            case Json.Decode.decodeString tokenErrorDecoder resp.body of
+                Result.Ok json ->
+                    case json.error of
+                        "access_denied" ->
+                            SoftError json.error json.description
+
+                        "authorization_pending" ->
+                            SoftError json.error json.description
+
+                        "slow_down" ->
+                            SoftError json.error json.description
+
+                        _ ->
+                            HardError json.error json.description httpErr
+
+                Result.Err jsonError ->
+                    HardError "BadTokenError" (Just jsonError) httpErr
+
+        Http.BadPayload reason resp ->
+            HardError "BadPayload" (Just reason) httpErr
+
+        _ ->
+            HardError (toString httpErr) Nothing httpErr
+
+
+type alias TokenErrorResponse =
     { error : String, description : Maybe String }
 
 
-tokenErrorDecoder : Json.Decode.Decoder TokenError
+tokenErrorDecoder : Json.Decode.Decoder TokenErrorResponse
 tokenErrorDecoder =
-    Json.Decode.map2 TokenError
+    Json.Decode.map2 TokenErrorResponse
         (Json.Decode.field "error" Json.Decode.string)
         (Json.Decode.field "error_description" (Json.Decode.maybe Json.Decode.string))
 
@@ -227,8 +274,11 @@ fetchToken baseUrl clientId clientSecret code =
 
         request =
             Http.post (baseUrl ++ "/token") body tokenResponseDecoder
+
+        cmd result =
+            Result.mapError tokenErrorFromHttpError result |> ReceivedAuthorization
     in
-    Http.send ReceivedAuthorization request
+    Http.send cmd request
 
 
 

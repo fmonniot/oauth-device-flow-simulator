@@ -191,8 +191,21 @@ logsOf msg date model =
                                         ]
                                     ]
 
-                                Result.Err httpError ->
-                                    [ logHttpError date httpError ]
+                                Result.Err (Watch.SoftError name desc) ->
+                                    let
+                                        msg =
+                                            Maybe.map (\m -> "; description: `" ++ m ++ "`") desc |> Maybe.withDefault ""
+                                    in
+                                    [ Log.info date ("Soft Error `" ++ name ++ "`" ++ msg) [] ]
+
+                                Result.Err (Watch.HardError name desc httpErr) ->
+                                    let
+                                        msg =
+                                            Maybe.map (\m -> "; description: `" ++ m ++ "`") desc |> Maybe.withDefault ""
+                                    in
+                                    [ Log.error date ("Hard Error `" ++ name ++ "`" ++ msg) []
+                                    , logHttpError date httpErr
+                                    ]
 
                         Watch.UpdateClientId newClientId ->
                             let

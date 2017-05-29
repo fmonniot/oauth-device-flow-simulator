@@ -151,6 +151,10 @@ green     #859900
     color: #cb4b16;
 }
 
+.log-entry .error {
+    color: #dc322f ;
+}
+
 .log-entry .log-details {
     padding-left: 2rem;
 }
