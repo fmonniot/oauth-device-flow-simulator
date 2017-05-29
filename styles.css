@@ -1,0 +1,201 @@
+.wrapper {
+    display: grid;
+    grid-template-columns: 30vw 70vw;
+    grid-template-rows: 80px 1fr;
+    grid-template-areas:
+        "header header"
+        "watch log";
+    height: 100%;
+}
+
+.header {
+    border-bottom: 1px solid lightgray;
+    padding: 10px;
+    grid-area: header;
+    height: 80px;
+    box-sizing: border-box;
+}
+
+.header h1 {
+    margin: 0;
+    padding: 0 0 0.2rem;
+    text-align: center;
+}
+
+.header ul {
+    padding: 0;
+    margin: 0;
+}
+
+.header li {
+    padding: 0;
+    display: inline-block;
+    width: 30%;
+    text-align: center;
+}
+
+.watch-container {
+    grid-area: watch;
+    text-align: center;
+}
+
+.watch-frame {
+    height: 28vw;
+    margin: 1vw;
+    border-radius: 50%;
+    border: 10px solid #EEE;
+    box-sizing: border-box;
+    padding: 4vw;
+    display: flex;
+    flex-direction: column;
+}
+
+.watch-text {
+    height: 70%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.watch-bottom {
+    height: 30%;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.watch-again {
+    width: 50%;
+}
+
+.watch-action {
+    width: 90%;
+    margin-left: 5%;
+    margin-top: 0.5rem;
+}
+
+.watch-action label {
+    display: inline-block;
+    width: 50%;
+    text-align: left;
+}
+
+.watch-action input {
+    width: calc(50% - 2*1px - 2*2px);
+    padding: 1px;
+}
+
+
+/*
+
+SOLARIZED   HEX    Prefered Usage
+--------- ------- ------------------------------------------------------
+base03    #002b36 background
+base02    #073642 background highlights
+base01    #586e75 comments / secondary content
+base00    #657b83 
+base0     #839496 body text / default code / primary content
+base1     #93a1a1 optional emphasis content
+base2     #eee8d5 
+base3     #fdf6e3 
+yellow    #b58900 
+orange    #cb4b16 
+red       #dc322f 
+magenta   #d33682 
+violet    #6c71c4 
+blue      #268bd2 
+cyan      #2aa198 
+green     #859900 
+
+*/
+
+.log-container {
+    grid-area: log;
+    display: block;
+    font-family: monospace;
+    white-space: pre;
+}
+
+.log-container {
+    background-color: #002b36;
+    color: #839496;
+    white-space:pre-wrap;
+    word-wrap: break-word;
+    overflow-y: scroll;
+    height: calc(100vh - 80px);
+}
+
+.log-entry .date {
+    padding-right: 0.5rem;
+    color: #586e75;
+}
+
+.log-entry .info {
+    color: #859900;
+}
+
+.log-entry .warn {
+    color: #cb4b16;
+}
+
+.log-entry .log-details {
+    padding-left: 2rem;
+}
+
+.log-entry .http-method {
+    padding-right: 0.5rem;
+    color: #268bd2;
+}
+
+.log-entry .http-path {
+    color: #6c71c4;
+}
+
+.log-entry .http-header-name {
+    color: #93a1a1;
+}
+
+.log-entry .http-header-name:after {
+    content: ": ";   
+}
+
+.log-entry .http-header-value {
+    color: #2aa198;
+}
+
+.log-entry .http-status-code {
+    color: #2aa198;
+    padding-right: 0.5rem;
+}
+
+.log-entry .http-status-text {
+    color: #b58900;
+}
+
+.log-entry .change-value-old {
+    color: #2aa198;
+}
+.log-entry .change-value-old:after {
+    content: " -> ";
+}
+.log-entry .change-value-new {
+    color: #b58900 ;
+}
+
+.record .identifier {
+    color: #268bd2;
+}
+
+.record .value {
+    color: #2aa198;
+}
+
+.record .indent {
+    padding-left: 2rem;
+    display: block;
+}
+
+.italic {
+    font-style: italic;
+}
