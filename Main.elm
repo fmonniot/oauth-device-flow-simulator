@@ -155,7 +155,7 @@ logsOf msg date model =
                             , Log.info date
                                 "Making request to ARTIK Cloud"
                                 [ Log.Http "POST" (model.watch.baseUrl ++ "/token")
-                                , Log.Header "Content-Type" "application/json"
+                                , Log.Header "Content-Type" "application/x-www-form-urlencoded"
                                 , Log.Data record
                                 ]
                             ]
