@@ -1,7 +1,7 @@
 module Watch exposing (Model, Msg(..), State, init, subscriptions, update, view)
 
 import Html exposing (Html, br, button, div, h1, hr, input, label, li, program, span, text, ul)
-import Html.Attributes exposing (class, placeholder, type_, value)
+import Html.Attributes exposing (checked, class, placeholder, type_, value)
 import Html.Events exposing (onClick, onInput)
 import Http
 import Json.Decode
@@ -42,8 +42,8 @@ type alias Model =
     , clientSecret : String
     , codes : Maybe Codes
     , error : Maybe String
-    , polling : Int
-    , poll : Bool
+    , pollingInterval : Int
+    , polling : Bool
     }
 
 
@@ -58,11 +58,11 @@ init =
     , token = Nothing
     , baseUrl = "http://localhost:1337/accounts-dev.artik.cloud:443"
     , clientId = "43252cf786e64ee59d6fb553eb08de4c"
-    , clientSecret = ""
+    , clientSecret = "7147f1cfd9c74125b7ac5f5084cbd459"
     , codes = Nothing
     , error = Nothing
-    , polling = defaultPolling
-    , poll = True
+    , pollingInterval = defaultPolling
+    , polling = True
     }
 
 
@@ -99,8 +99,7 @@ update msg model =
         ReceivedCodes result ->
             case result of
                 Result.Ok codes ->
-                    -- TODO Send UpdatePolling codes.interval
-                    { model | codes = Just codes, state = WaitingAuthorization } ! []
+                    { model | codes = Just codes, state = WaitingAuthorization, pollingInterval = codes.interval } ! []
 
                 Result.Err error ->
                     let
@@ -135,10 +134,10 @@ update msg model =
             { model | clientSecret = clientSecret } ! []
 
         UpdatePollingInterval polling ->
-            { model | polling = polling } ! []
+            { model | pollingInterval = polling } ! []
 
         TogglePolling ->
-            { model | poll = not model.poll } ! []
+            { model | polling = not model.polling } ! []
 
 
 
@@ -273,8 +272,8 @@ view model =
         , hr [] []
         , config "Client id:" (input [ placeholder "Client ID", onInput UpdateClientId, value model.clientId ] [])
         , config "Client secret:" (input [ placeholder "Client Secret", onInput UpdateClientSecret, value model.clientSecret ] [])
-        , config "Polling interval:" (input [ placeholder "Polling Interval", onInput pollingUpdate, value (toString model.polling) ] [])
-        , config "Stop polling" (input [ type_ "checkbox", onClick TogglePolling ] [])
+        , config "Polling interval:" (input [ placeholder "Polling Interval", onInput pollingUpdate, value (toString model.pollingInterval) ] [])
+        , config "Polling" (input [ type_ "checkbox", onClick TogglePolling, checked model.polling ] [])
         ]
 
 
@@ -341,7 +340,7 @@ errorView error =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    if model.state == WaitingAuthorization && model.poll then
-        Time.every (toFloat model.polling * Time.second) (always GetToken)
+    if model.state == WaitingAuthorization && model.polling then
+        Time.every (toFloat model.pollingInterval * Time.second) (always GetToken)
     else
         Sub.none

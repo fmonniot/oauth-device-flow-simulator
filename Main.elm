@@ -128,6 +128,7 @@ logsOf msg date model =
                                         , Log.Status 200
                                         , Log.Header "Accept" "application/json, */*"
                                         ]
+                                    , Log.warn date ("Setting up the polling interval to " ++ toString codes.interval ++ "sec") []
                                     ]
 
                                 Result.Err httpError ->
@@ -200,7 +201,7 @@ logsOf msg date model =
                         Watch.UpdatePollingInterval newPollingInterval ->
                             let
                                 oldPollingInterval =
-                                    model.watch.polling
+                                    model.watch.pollingInterval
 
                                 toS i =
                                     toString i ++ "sec"
@@ -213,7 +214,7 @@ logsOf msg date model =
                         Watch.TogglePolling ->
                             let
                                 message =
-                                    if model.watch.poll then
+                                    if model.watch.polling then
                                         "Stopping AKC polling"
                                     else
                                         "Will poll AKC each " ++ toString model.watch.polling ++ " seconds"
@@ -228,7 +229,7 @@ logsOf msg date model =
         DisplayConfig ->
             let
                 polling =
-                    toString model.watch.polling ++ "sec"
+                    toString model.watch.pollingInterval ++ "sec"
 
                 details =
                     Log.Data
