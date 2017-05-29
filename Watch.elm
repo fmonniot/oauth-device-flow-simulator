@@ -1,7 +1,7 @@
 module Watch exposing (Model, Msg(..), State, init, subscriptions, update, view)
 
-import Html exposing (Html, br, button, div, h1, input, label, li, program, span, text, ul)
-import Html.Attributes exposing (class, placeholder, value)
+import Html exposing (Html, br, button, div, h1, hr, input, label, li, program, span, text, ul)
+import Html.Attributes exposing (class, placeholder, type_, value)
 import Html.Events exposing (onClick, onInput)
 import Http
 import Json.Decode
@@ -43,6 +43,7 @@ type alias Model =
     , codes : Maybe Codes
     , error : Maybe String
     , polling : Int
+    , poll : Bool
     }
 
 
@@ -61,6 +62,7 @@ init =
     , codes = Nothing
     , error = Nothing
     , polling = defaultPolling
+    , poll = True
     }
 
 
@@ -76,7 +78,8 @@ type Msg
     | TryAgain
     | UpdateClientId String
     | UpdateClientSecret String
-    | UpdatePolling Int
+    | UpdatePollingInterval Int
+    | TogglePolling
 
 
 
@@ -131,8 +134,11 @@ update msg model =
         UpdateClientSecret clientSecret ->
             { model | clientSecret = clientSecret } ! []
 
-        UpdatePolling polling ->
+        UpdatePollingInterval polling ->
             { model | polling = polling } ! []
+
+        TogglePolling ->
+            { model | poll = not model.poll } ! []
 
 
 
@@ -234,7 +240,7 @@ view : Model -> Html Msg
 view model =
     let
         pollingUpdate s =
-            UpdatePolling (Result.withDefault defaultPolling (String.toInt s))
+            UpdatePollingInterval (Result.withDefault defaultPolling (String.toInt s))
 
         view =
             case model.state of
@@ -263,20 +269,18 @@ view model =
     in
     div [ class "watch-container" ]
         [ div [ class "watch-frame" ] view
-        , button [ class "watch-action", onClick TryAgain ] [ text "Try Again" ]
-        , div [ class "watch-action" ]
-            [ label [] [ text "Client ID:" ]
-            , input [ placeholder "Client ID", onInput UpdateClientId, value model.clientId ] []
-            ]
-        , div [ class "watch-action" ]
-            [ label [] [ text "Client Secret:" ]
-            , input [ placeholder "Client Secret", onInput UpdateClientSecret, value model.clientSecret ] []
-            ]
-        , div [ class "watch-action" ]
-            [ label [] [ text "Polling interval:" ]
-            , input [ placeholder "Polling Interval", onInput pollingUpdate, value (toString model.polling) ] []
-            ]
+        , button [ onClick TryAgain ] [ text "Try Again" ]
+        , hr [] []
+        , config "Client id:" (input [ placeholder "Client ID", onInput UpdateClientId, value model.clientId ] [])
+        , config "Client secret:" (input [ placeholder "Client Secret", onInput UpdateClientSecret, value model.clientSecret ] [])
+        , config "Polling interval:" (input [ placeholder "Polling Interval", onInput pollingUpdate, value (toString model.polling) ] [])
+        , config "Stop polling" (input [ type_ "checkbox", onClick TogglePolling ] [])
         ]
+
+
+config : String -> Html Msg -> Html Msg
+config name component =
+    label [ class "watch-action" ] [ text name, component ]
 
 
 welcomeView =
@@ -337,7 +341,7 @@ errorView error =
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    if model.state == WaitingAuthorization then
+    if model.state == WaitingAuthorization && model.poll then
         Time.every (toFloat model.polling * Time.second) (always GetToken)
     else
         Sub.none

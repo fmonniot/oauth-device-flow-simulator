@@ -8,6 +8,11 @@
     height: 100%;
 }
 
+hr {
+    border: none;
+    border-bottom: 1px solid lightgray;
+}
+
 .header {
     border-bottom: 1px solid lightgray;
     padding: 10px;
@@ -73,17 +78,27 @@
     width: 90%;
     margin-left: 5%;
     margin-top: 0.5rem;
+    clear: both;
+    display: block;
+    text-align: left;
 }
 
 .watch-action label {
     display: inline-block;
-    width: 50%;
+    width: 100%;
     text-align: left;
 }
 
 .watch-action input {
     width: calc(50% - 2*1px - 2*2px);
     padding: 1px;
+    float: right;
+}
+
+.watch-action input[type=checkbox] {
+    margin-left: 0px;
+    left: -0.4rem;
+    position: relative;
 }
 
 

@@ -197,7 +197,7 @@ logsOf msg date model =
                             in
                             [ Log.warn date "Updating the client secret" [ Log.ChangeValue oldClientSecret newClientSecret ] ]
 
-                        Watch.UpdatePolling newPollingInterval ->
+                        Watch.UpdatePollingInterval newPollingInterval ->
                             let
                                 oldPollingInterval =
                                     model.watch.polling
@@ -209,6 +209,16 @@ logsOf msg date model =
                                     [ Log.ChangeValue (toS oldPollingInterval) (toS newPollingInterval) ]
                             in
                             [ Log.warn date "Updating the polling interval" details ]
+
+                        Watch.TogglePolling ->
+                            let
+                                message =
+                                    if model.watch.poll then
+                                        "Stopping AKC polling"
+                                    else
+                                        "Will poll AKC each " ++ toString model.watch.polling ++ " seconds"
+                            in
+                            [ Log.warn date message [] ]
             in
             model.logs ++ logs
 
