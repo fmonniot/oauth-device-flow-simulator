@@ -1,4 +1,4 @@
-module Log exposing (KeyValue(..), Model, info, record, recordChildren, recordValue, view, warn)
+module Log exposing (KeyValue(..), Model, error, info, record, recordChildren, recordValue, view, warn)
 
 import Date
 import Html exposing (Html, br, button, div, h1, input, li, program, span, text, ul)
@@ -39,6 +39,7 @@ type KeyValue
 type Level
     = Info
     | Warn
+    | Error
 
 
 type alias Model =
@@ -53,6 +54,11 @@ info date message details =
 warn : Date.Date -> String -> List KeyValue -> Model
 warn date message details =
     Model Warn date message details
+
+
+error : Date.Date -> String -> List KeyValue -> Model
+error date message details =
+    Model Error date message details
 
 
 view : List Model -> Html Messages.Msg
@@ -77,6 +83,9 @@ logEntry log =
 
                 Warn ->
                     "warn"
+
+                Error ->
+                    "error"
 
         details d =
             case d of
@@ -224,8 +233,14 @@ statusAsText status =
         200 ->
             "OK"
 
+        400 ->
+            "Bad Request"
+
         401 ->
             "Unauthorized"
+
+        403 ->
+            "Forbidden"
 
         _ ->
             "Unknown"
