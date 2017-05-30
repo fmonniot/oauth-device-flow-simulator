@@ -19,7 +19,7 @@ import Watch
 
 type alias Model =
     { watch : Watch.Model
-    , logs : List Log.Model
+    , logs : List Log.Log
     }
 
 
@@ -99,7 +99,7 @@ update outerMsg model =
 
 {-| logsOf will return the list of log statement associated with a given message.
 -}
-logsOf : Msg -> Date.Date -> Model -> List Log.Model
+logsOf : Msg -> Date.Date -> Model -> List Log.Log
 logsOf msg date model =
     case msg of
         WatchMsg Watch.TryAgain ->
@@ -264,7 +264,7 @@ logsOf msg date model =
             model.logs ++ [ Log.info date "Received WithTime message wrapped two times !" [] ]
 
 
-logHttpError : Date.Date -> Http.Error -> Log.Model
+logHttpError : Date.Date -> Http.Error -> Log.Log
 logHttpError date err =
     case err of
         Http.BadUrl url ->
