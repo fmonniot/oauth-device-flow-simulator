@@ -1,23 +1,20 @@
 module Log exposing (KeyValue(..), Log, error, info, record, recordChildren, recordValue, view, warn)
 
-{-| This module expose a way to display a console-like interface. A console is,
-at its base, just a list of log. This module give you way to construct those logs and
+{-| This module expose a way to display a console-like interface.
+
+A console is, at its base, just a list of log. This module give you way to construct those logs and
 to display them in a friendly way.
 
 
-# Definition
+# Log
 
 @docs Log
-@docs KeyValue
-
-
-# Log builder
-
 @docs info, warn, error
 
 
-# JSON Like Structure
+# Details
 
+@docs KeyValue
 @docs record, recordChildren, recordValue
 
 
@@ -36,22 +33,64 @@ import Messages exposing (Msg)
 type Record
     = One String String -- name, value
     | OneToMany String (List Record) -- name, children
-    | ManyToMany (List Record)
+    | ManyToMany (List Record) -- children only
 
 
-{-| -}
+{-| A `Record` can be viewed as a JSON element. An example will let you understand really quickly
+how to use and build records:
+
+    record
+        [ recordValue "device_code" codes.deviceCode
+        , recordValue "user_code" codes.userCode
+        , recordValue "verification_url" codes.verificationUrl
+        , recordValue "expires_in" (toString codes.expiresIn)
+        , recordValue "interval" (toString codes.interval)
+        ]
+
+could be translated into the following JSON
+
+    {
+        "device_code": "value",
+        "user_code": "value",
+        "verification_url": "value",
+        "expires_in": "value",
+        "interval": "value"
+    }
+
+To build a `Record`, you have access to this function which can be used to build
+_root_ element of a record and `recordChildren` and `recordValue`, which build named
+object and simple key value respectively.
+
+-}
 record : List Record -> Record
 record children =
     ManyToMany children
 
 
-{-| -}
+{-| This function let you build a named record containing other record.
+
+    recordChilden "parent"
+        [ recordValue "k1" "v1
+        , recordValue "k2" "v2"
+        ]
+
+would be translated into
+
+    {
+        "parent": {
+            "k1": "v1",
+            "k2": "v2"
+        }
+    }
+
+-}
 recordChildren : String -> List Record -> Record
 recordChildren name children =
     OneToMany name children
 
 
-{-| -}
+{-| A simple key value record
+-}
 recordValue : String -> String -> Record
 recordValue name value =
     One name value
@@ -63,7 +102,7 @@ recordValue name value =
   - `Status` indicates a HTTP status. The log will print the numeric value alongside the associated english name.
   - `Http` represents the basis of a HTTP request/response. The first string is the method and the second is the path.
   - `Header` represents a HTTP header, with the first field being the name and the second the value
-  - `Data` represents a structured data which will be displayed as JSON. More information on that type below.
+  - `Data` represents a structured data which will be displayed as JSON. More information on the `Record` type below.
   - `NoData` indicates the `Body` of the request/response is empty.
 
 -}
@@ -82,12 +121,14 @@ type Level
     | Error
 
 
-{-| Main building block of this module.
-A `Log` is a dated piece of information with optional details (metadata) associated.
-To build a `Log`, use the three method `info`, `warn` or `error` depending on the
-importance you want to give to the information.
+{-| A `Log` is a dated piece of information with optional details (metadata) associated.
+
 A `Log` can have associated details to it. They are represented by a `List` of key value.
 More information in the `KeyValue` type.
+
+To build a `Log` use the three method `info`, `warn` or `error` below, depending on the
+importance you want to give to the information.
+
 -}
 type Log
     = Log { lvl : Level, date : Date.Date, message : String, details : List KeyValue }
@@ -99,7 +140,10 @@ log lvl date message details =
 
 
 {-| Construct an information log.
-It's the more common kind of log you can have.
+
+It's the more common kind of log you can have. The short idea is, if it's not
+a warning or an error then it's most probably an information ;).
+
 -}
 info : Date.Date -> String -> List KeyValue -> Log
 info date message details =
@@ -107,9 +151,11 @@ info date message details =
 
 
 {-| Construct a warning log.
+
 Use a warning log when you want to attract the user attention about something
 which is not critical. For example, if a HTTP request fail but we can retry it
 just warn the user of the failure and that a retry is in progress.
+
 -}
 warn : Date.Date -> String -> List KeyValue -> Log
 warn date message details =
@@ -117,9 +163,11 @@ warn date message details =
 
 
 {-| Construct an error log.
+
 An error log indicate a failure in the system. Most probably something happened
 which have made the system unable to repair itself. For example, a HTTP request
 which fail even after having retrying it.
+
 -}
 error : Date.Date -> String -> List KeyValue -> Log
 error date message details =
@@ -127,7 +175,9 @@ error date message details =
 
 
 {-| Build the view representing the given list of `Log`.
+
 This is part of the Elm Architecture.
+
 -}
 view : List Log -> Html Messages.Msg
 view logs =
