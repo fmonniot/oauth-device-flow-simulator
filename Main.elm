@@ -221,6 +221,13 @@ logsOf msg date model =
             in
             model.logs ++ [ Log.warn date "Updating the polling interval" details ]
 
+        WatchMsg (Watch.UpdateBaseUrl newBaseUrl) ->
+            let
+                oldBaseUrl =
+                    model.watch.baseUrl
+            in
+            model.logs ++ [ Log.warn date "Updating the base url" [ Log.ChangeValue oldBaseUrl newBaseUrl ] ]
+
         WatchMsg Watch.TogglePolling ->
             let
                 message =

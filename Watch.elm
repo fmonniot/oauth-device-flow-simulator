@@ -79,6 +79,7 @@ type Msg
     | UpdateClientId String
     | UpdateClientSecret String
     | UpdatePollingInterval Int
+    | UpdateBaseUrl String
     | TogglePolling
 
 
@@ -139,6 +140,9 @@ update msg model =
 
         UpdateClientSecret clientSecret ->
             { model | clientSecret = clientSecret } ! []
+
+        UpdateBaseUrl baseUrl ->
+            { model | baseUrl = baseUrl } ! []
 
         UpdatePollingInterval polling ->
             { model | pollingInterval = polling } ! []
@@ -314,6 +318,7 @@ view model =
         [ div [ class "watch-frame" ] view
         , button [ onClick TryAgain ] [ text "Try Again" ]
         , hr [] []
+        , config "Base URL:" (input [ placeholder "Base URL", onInput UpdateBaseUrl, value model.baseUrl ] [])
         , config "Client id:" (input [ placeholder "Client ID", onInput UpdateClientId, value model.clientId ] [])
         , config "Client secret:" (input [ placeholder "Client Secret", onInput UpdateClientSecret, value model.clientSecret ] [])
         , config "Polling interval:" (input [ placeholder "Polling Interval", onInput pollingUpdate, value (toString model.pollingInterval) ] [])
