@@ -1,0 +1,287 @@
+[
+  {
+    "name": "Log",
+    "comment": " This module expose a way to display a console-like interface.\n\nA console is, at its base, just a list of log. This module give you way to construct those logs and\nto display them in a friendly way.\n\n\n# Log\n\n@docs Log\n@docs info, warn, error\n\n\n# Details\n\n@docs KeyValue\n@docs record, recordChildren, recordValue\n\n\n# Elm Architecture\n\n@docs view\n\n",
+    "aliases": [],
+    "types": [
+      {
+        "name": "KeyValue",
+        "comment": " A KeyValue is a way to pass more information to a `Log` statement.\n\n  - `ChangeValue` is obvious: it indicates a value which have changed (eg. the user changed a configuration)\n  - `Status` indicates a HTTP status. The log will print the numeric value alongside the associated english name.\n  - `Http` represents the basis of a HTTP request/response. The first string is the method and the second is the path.\n  - `Header` represents a HTTP header, with the first field being the name and the second the value\n  - `Data` represents a structured data which will be displayed as JSON. More information on the `Record` type below.\n  - `NoData` indicates the `Body` of the request/response is empty.\n\n",
+        "args": [],
+        "cases": [
+          [
+            "ChangeValue",
+            [
+              "String",
+              "String"
+            ]
+          ],
+          [
+            "Status",
+            [
+              "Int"
+            ]
+          ],
+          [
+            "Http",
+            [
+              "String",
+              "String"
+            ]
+          ],
+          [
+            "Header",
+            [
+              "String",
+              "String"
+            ]
+          ],
+          [
+            "Data",
+            [
+              "Log.Record"
+            ]
+          ],
+          [
+            "NoData",
+            []
+          ]
+        ]
+      },
+      {
+        "name": "Log",
+        "comment": " A `Log` is a dated piece of information with optional details (metadata) associated.\n\nA `Log` can have associated details to it. They are represented by a `List` of key value.\nMore information in the `KeyValue` type.\n\nTo build a `Log` use the three method `info`, `warn` or `error` below, depending on the\nimportance you want to give to the information.\n\n",
+        "args": [],
+        "cases": []
+      }
+    ],
+    "values": [
+      {
+        "name": "error",
+        "comment": " Construct an error log.\n\nAn error log indicate a failure in the system. Most probably something happened\nwhich have made the system unable to repair itself. For example, a HTTP request\nwhich fail even after having retrying it.\n\n",
+        "type": "Date.Date -> String -> List Log.KeyValue -> Log.Log"
+      },
+      {
+        "name": "info",
+        "comment": " Construct an information log.\n\nIt's the more common kind of log you can have. The short idea is, if it's not\na warning or an error then it's most probably an information ;).\n\n",
+        "type": "Date.Date -> String -> List Log.KeyValue -> Log.Log"
+      },
+      {
+        "name": "record",
+        "comment": " A `Record` can be viewed as a JSON element. An example will let you understand really quickly\nhow to use and build records:\n\n    record\n        [ recordValue \"device_code\" codes.deviceCode\n        , recordValue \"user_code\" codes.userCode\n        , recordValue \"verification_url\" codes.verificationUrl\n        , recordValue \"expires_in\" (toString codes.expiresIn)\n        , recordValue \"interval\" (toString codes.interval)\n        ]\n\ncould be translated into the following JSON\n\n    {\n        \"device_code\": \"value\",\n        \"user_code\": \"value\",\n        \"verification_url\": \"value\",\n        \"expires_in\": \"value\",\n        \"interval\": \"value\"\n    }\n\nTo build a `Record`, you have access to this function which can be used to build\n_root_ element of a record and `recordChildren` and `recordValue`, which build named\nobject and simple key value respectively.\n\n",
+        "type": "List Log.Record -> Log.Record"
+      },
+      {
+        "name": "recordChildren",
+        "comment": " This function let you build a named record containing other record.\n\n    recordChilden \"parent\"\n        [ recordValue \"k1\" \"v1\n        , recordValue \"k2\" \"v2\"\n        ]\n\nwould be translated into\n\n    {\n        \"parent\": {\n            \"k1\": \"v1\",\n            \"k2\": \"v2\"\n        }\n    }\n\n",
+        "type": "String -> List Log.Record -> Log.Record"
+      },
+      {
+        "name": "recordValue",
+        "comment": " A simple key value record\n",
+        "type": "String -> String -> Log.Record"
+      },
+      {
+        "name": "view",
+        "comment": " Build the view representing the given list of `Log`.\n\nThis is part of the Elm Architecture.\n\n",
+        "type": "List Log.Log -> Html.Html Messages.Msg"
+      },
+      {
+        "name": "warn",
+        "comment": " Construct a warning log.\n\nUse a warning log when you want to attract the user attention about something\nwhich is not critical. For example, if a HTTP request fail but we can retry it\njust warn the user of the failure and that a retry is in progress.\n\n",
+        "type": "Date.Date -> String -> List Log.KeyValue -> Log.Log"
+      }
+    ],
+    "generated-with-elm-version": "0.18.0"
+  },
+  {
+    "name": "Messages",
+    "comment": " This module expose root messages of the application.\n\nIt has its own module as its required by both `Main` and `Log`, and\nwould otherwise create cyclic dependencies.\n\n\n# Elm Architecture\n\n@docs Msg\n\n",
+    "aliases": [],
+    "types": [
+      {
+        "name": "Msg",
+        "comment": "\n\n  - `NoOp` will do nothing\n  - `WatchMsg` is a 'container' type for the messages defined in the `Watch` module\n  - `ResetAll` will reset the application to its original state\n  - `WithTime` is a container type for `Msg` itself. It let us have access to the `Date` at\n    which the message have been emitted. Most useful for the logs.\n  - `DisplayConfig` will print the current application configuration in the logs.\n\n",
+        "args": [],
+        "cases": [
+          [
+            "NoOp",
+            []
+          ],
+          [
+            "WatchMsg",
+            [
+              "Watch.Msg"
+            ]
+          ],
+          [
+            "ResetAll",
+            []
+          ],
+          [
+            "WithTime",
+            [
+              "Date.Date",
+              "Messages.Msg"
+            ]
+          ],
+          [
+            "DisplayConfig",
+            []
+          ]
+        ]
+      }
+    ],
+    "values": [],
+    "generated-with-elm-version": "0.18.0"
+  },
+  {
+    "name": "Watch",
+    "comment": " The Watch module is an implementation of the OAuth2 Device Flow\nfor a simulated watch (hence the module name).\n\nIt follows the Elm Architecture and exposes the basics function for it.\nThus most of the documentation will be focused on the state and messages more than\non the architecture itself.\n\nSome type and function are exposed simply for the sake of this documentation. In\na real world project it shouldn't be exposed, but for this demo it's a good learning\nexperience :).\n\n\n# State machine\n\n@docs Model, State, Msg, TokenError\n\n\n# Elm Architecture\n\n@docs init, subscriptions, update, view\n\n",
+    "aliases": [
+      {
+        "name": "Model",
+        "comment": " The model is the current state of the watch.\n\nIt contains the configuration, the current `State` and all the moving part\nnecessary to make the watch run. It is a good example of the minimum an\napplication will needs to implements the OAuth Device Flow (minus the polling\nboolean which is not needed at all; unless you're doing a demo ;)).\n\nPart of the Elm Architecture.\n\n",
+        "args": [],
+        "type": "{ state : Watch.State , token : Maybe.Maybe String , baseUrl : String , clientId : String , clientSecret : String , codes : Maybe.Maybe Watch.Codes , error : Maybe.Maybe String , pollingInterval : Int , polling : Bool }"
+      }
+    ],
+    "types": [
+      {
+        "name": "Msg",
+        "comment": " Messages can be grouped in two categories: the _state transition_ messages\nand the _configuration_ messages. The former are responsible to pass from\na `State` to another while the latter let the user change the watch configuration at\nruntime. Note that in a real world application, the _configuration_ messages should\nnot be made available to the end user.\n\n\n## State Transition\n\n  - `Connect` is fired when the user want to connect its watch. It will transition\n    the state to `Connecting`.\n  - `ReceivedCodes` is fired when the creation code complete. It contains the result\n    of the HTTP call, either an `HTTP.Error`or the representation of the response.\n  - `GetToken` is fired whenever a call to the token endpoint will be made, in the\n    hope the application can have its token :).\n  - `ReceivedAuthorization` is the result of a call to the `/token` endpoint. It\n    contains either the token response (access token, refresh token, expiration time)\n    or the error that happened.\n  - `TryAgain` is a special case. It let the demo user begin a new flow while\n    keeping the current logs as is. Useful when an error occured and retry.\n    Hence the name :).\n\n\n## Configuration\n\n  - `UpdateClientId` let the demo user provide an OAuth client ID,\n  - `UpdateClientSecret` let the demo user provide an OAuth client secret,\n  - `UpdatePollingInterval` let the demo user overrides the polling interval,\n  - `UpdateBaseUrl` let the demo user provide the authorization server base URL\n    (the watch automatically append the path to it).\n  - `TogglePolling` let the demo user stop the polling in the `WaitingAuthorization` state.\n    This is mainly useful because the demo user may not want to pollute the logs\n    with the same call falling again and again because the watch have not been\n    authorized yet.\n\nPart of the Elm Architecture\n\n",
+        "args": [],
+        "cases": [
+          [
+            "Connect",
+            []
+          ],
+          [
+            "ReceivedCodes",
+            [
+              "Result.Result Http.Error Watch.Codes"
+            ]
+          ],
+          [
+            "GetToken",
+            []
+          ],
+          [
+            "ReceivedAuthorization",
+            [
+              "Result.Result Watch.TokenError Watch.TokenResponse"
+            ]
+          ],
+          [
+            "TryAgain",
+            []
+          ],
+          [
+            "UpdateClientId",
+            [
+              "String"
+            ]
+          ],
+          [
+            "UpdateClientSecret",
+            [
+              "String"
+            ]
+          ],
+          [
+            "UpdatePollingInterval",
+            [
+              "Int"
+            ]
+          ],
+          [
+            "UpdateBaseUrl",
+            [
+              "String"
+            ]
+          ],
+          [
+            "TogglePolling",
+            []
+          ]
+        ]
+      },
+      {
+        "name": "State",
+        "comment": " State representation of the watch. The `Msg` below are the link between different state.\n\nThe watch is based on five state, plus one when an error occured. Each state can be considered\nas a step in the flow. Here there are (in order):\n\n  - `Welcome` is the first step. In this state a user is welcomed to the watch and asked if they\n    wants to connect the watch. They can move to the next step by clicking the _connect_ button.\n\n  - `Connecting` is a transiant state. We display this screen to let the user know their request\n    have been made and to be patient :). If the response from the authorization server is\n    successful then we pass to the next step, otherwise we display the `Error` state. In a real\n    world application you may want to be a little more intelligent on how this error is managed\n    and displayed to the user.\n\n  - `WaitingAuthorization` is the next step. The user is displayed what to do next (going to the\n    displayed URL and enter the given code). In the meantime the watch will poll the authorization\n    server at the specified interval. In this demo, the user can change the polling interval and\n    stop the polling itself. In a real world application this shouldn't be displaying to the user.\n    At each call to the server, there is four possible outcomes:\n    1.  The server respond with a valid token. In that case the application will move to the\n        `Authorized` state.\n    2.  The server respond with a _soft error_ (ie. slow down, authorization pending, ...).\n        Those error won't change the current state. This demo app do nothing of them, in a real\n        world application you should respond accordingly (eg. increase the polling interval if\n        received a slow down error)\n    3.  The server respond with a _hard errro_ `access_denied`. In that case the application will\n        pass to the `Denied` state.\n    4.  The server respond with any of the others _hard error_\n        (ie. invalid_request, invalid_grant_type, ...). In that case we display the error message\n        in the `Error` state. A real world application should be a bit more careful in the error\n        message they display to the user.\n\n  - `Authorized` is a final state, meaning the demo will stop here. It will show the obtained token.\n    A real world application should display the connected version of itself here (that's why we\n    wanted the whole flow after all ;)).\n\n  - `Denied` is a final state. The user have denied access to the platform. In a real world application\n    it could be interesting to explain to the user why your application needed the permissions\n    they have been asked for alongside a \"Connect again\" button. In the end, the user still choose\n    to deny access to your application, so maybe their are not interested again :(.\n\n  - `Error` is a final state. It's a crude way of doing error management and shouldn't be done like\n    that in a real world application. For the demo's sake, the simplicity is enough though.\n\n",
+        "args": [],
+        "cases": [
+          [
+            "Welcome",
+            []
+          ],
+          [
+            "Connecting",
+            []
+          ],
+          [
+            "WaitingAuthorization",
+            []
+          ],
+          [
+            "Authorized",
+            []
+          ],
+          [
+            "Denied",
+            []
+          ],
+          [
+            "Error",
+            []
+          ]
+        ]
+      },
+      {
+        "name": "TokenError",
+        "comment": " TokenError represent an error returned by the authorization server on the `/token` endpoint.\n\nThose errors can be divided in two categories:\n\n  - `SoftError` are error on which the client can continue the flow.\n    It contains the name of the error and an optional description of it.\n    Most of the time, the description should be enough to understand what the problem is. If it's\n    not clear enough, the different OAuth2 RFC can have the context of the error.\n  - `HardError` are error which interrupt the flow. When one is found, the application\n    will need to begin a new flow from the start. As with `SoftError`, it contains an error name\n    and a possible description to help find what the problem is.\n\n",
+        "args": [],
+        "cases": [
+          [
+            "SoftError",
+            [
+              "String",
+              "Maybe.Maybe String"
+            ]
+          ],
+          [
+            "HardError",
+            [
+              "String",
+              "Maybe.Maybe String",
+              "Http.Error"
+            ]
+          ]
+        ]
+      }
+    ],
+    "values": [
+      {
+        "name": "init",
+        "comment": " Initial model.\n\nPart of the Elm Architecture.\n\n",
+        "type": "Watch.Model"
+      },
+      {
+        "name": "subscriptions",
+        "comment": " Subscriptions of this module.\n\nwhen the state is in `WaitingAuthorization` and the `polling` boolean is true, then\nwe emit a `GetToken` message every `pollingInterval` seconds. Otherwise we do nothing.\n\nPart of the Elm Architecture.\n\n",
+        "type": "Watch.Model -> Platform.Sub.Sub Watch.Msg"
+      },
+      {
+        "name": "update",
+        "comment": " Update function.\n\nIt takes a message, the current model and compute what changes to apply.\nFor more information on what this function do, look up the `State` and `Msg` documentation.\n\nPart of the Elm Architecture.\n\n",
+        "type": "Watch.Msg -> Watch.Model -> ( Watch.Model, Platform.Cmd.Cmd Watch.Msg )"
+      },
+      {
+        "name": "view",
+        "comment": " Build the view representing the current state of the watch.\n\nPart of the Elm Architecture.\n\n",
+        "type": "Watch.Model -> Html.Html Watch.Msg"
+      }
+    ],
+    "generated-with-elm-version": "0.18.0"
+  }
+]
