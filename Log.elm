@@ -89,8 +89,13 @@ importance you want to give to the information.
 A `Log` can have associated details to it. They are represented by a `List` of key value.
 More information in the `KeyValue` type.
 -}
-type alias Log =
-    { lvl : Level, date : Date.Date, message : String, details : List KeyValue }
+type Log
+    = Log { lvl : Level, date : Date.Date, message : String, details : List KeyValue }
+
+
+log : Level -> Date.Date -> String -> List KeyValue -> Log
+log lvl date message details =
+    Log { lvl = lvl, date = date, message = message, details = details }
 
 
 {-| Construct an information log.
@@ -98,7 +103,7 @@ It's the more common kind of log you can have.
 -}
 info : Date.Date -> String -> List KeyValue -> Log
 info date message details =
-    Log Info date message details
+    log Info date message details
 
 
 {-| Construct a warning log.
@@ -108,7 +113,7 @@ just warn the user of the failure and that a retry is in progress.
 -}
 warn : Date.Date -> String -> List KeyValue -> Log
 warn date message details =
-    Log Warn date message details
+    log Warn date message details
 
 
 {-| Construct an error log.
@@ -118,7 +123,7 @@ which fail even after having retrying it.
 -}
 error : Date.Date -> String -> List KeyValue -> Log
 error date message details =
-    Log Error date message details
+    log Error date message details
 
 
 {-| Build the view representing the given list of `Log`.
@@ -135,60 +140,62 @@ view logs =
 
 logEntry : Log -> Html Msg
 logEntry log =
-    let
-        date =
-            "[" ++ dateToString log.date ++ "]"
+    case log of
+        Log { lvl, date, message, details } ->
+            let
+                dateStr =
+                    "[" ++ dateToString date ++ "]"
 
-        messageClass =
-            case log.lvl of
-                Info ->
-                    "info"
+                messageClass =
+                    case lvl of
+                        Info ->
+                            "info"
 
-                Warn ->
-                    "warn"
+                        Warn ->
+                            "warn"
 
-                Error ->
-                    "error"
+                        Error ->
+                            "error"
 
-        details d =
-            case d of
-                Http method path ->
-                    div [ class "log-details" ]
-                        [ div []
-                            [ span [ class "http-method" ] [ text method ]
-                            , span [ class "http-path" ] [ text path ]
-                            ]
-                        ]
+                detailsView d =
+                    case d of
+                        Http method path ->
+                            div [ class "log-details" ]
+                                [ div []
+                                    [ span [ class "http-method" ] [ text method ]
+                                    , span [ class "http-path" ] [ text path ]
+                                    ]
+                                ]
 
-                Header name value ->
-                    div [ class "log-details" ] [ header name value False ]
+                        Header name value ->
+                            div [ class "log-details" ] [ header name value False ]
 
-                ChangeValue old new ->
-                    div [ class "log-details" ]
-                        [ span [ class "change-value-old" ] [ text old ]
-                        , span [ class "change-value-new" ] [ text new ]
-                        ]
+                        ChangeValue old new ->
+                            div [ class "log-details" ]
+                                [ span [ class "change-value-old" ] [ text old ]
+                                , span [ class "change-value-new" ] [ text new ]
+                                ]
 
-                Status status ->
-                    div [ class "log-details" ]
-                        [ div []
-                            [ span [ class "http-status-code" ] [ text (toString status) ]
-                            , span [ class "http-status-text" ] [ text (statusAsText status) ]
-                            ]
-                        ]
+                        Status status ->
+                            div [ class "log-details" ]
+                                [ div []
+                                    [ span [ class "http-status-code" ] [ text (toString status) ]
+                                    , span [ class "http-status-text" ] [ text (statusAsText status) ]
+                                    ]
+                                ]
 
-                Data record ->
-                    div [ class "log-details", class "record" ] (recordView 0 record)
+                        Data record ->
+                            div [ class "log-details", class "record" ] (recordView 0 record)
 
-                NoData ->
-                    div [ class "log-details" ] [ header "Body" "none" True ]
-    in
-    div [ class "log-entry" ]
-        ([ span [ class "date" ] [ text date ]
-         , span [ class messageClass ] [ text log.message ]
-         ]
-            ++ (log.details |> List.sortBy sortByKeyValue |> List.map details)
-        )
+                        NoData ->
+                            div [ class "log-details" ] [ header "Body" "none" True ]
+            in
+            div [ class "log-entry" ]
+                ([ span [ class "date" ] [ text dateStr ]
+                 , span [ class messageClass ] [ text message ]
+                 ]
+                    ++ (details |> List.sortBy sortByKeyValue |> List.map detailsView)
+                )
 
 
 sortByKeyValue : KeyValue -> String
