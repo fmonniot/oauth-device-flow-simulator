@@ -1,5 +1,9 @@
 # OAuth Device Flow Simulator
 
+## Documentation
+
+The elm documentation of this project is available online at https://francois.monniot.eu/oauth-device-flow-simulator/docs/.
+The `Watch` section contains the implementation of Device Flow, and is well documented to let other people understand how the flow works.
 
 ## TODO
 
@@ -12,8 +16,8 @@
 - [x] Look if we can have a Log module which scroll automatically.
     Appear we can by using `elm-lang/dom` (http://package.elm-lang.org/packages/elm-lang/dom/1.1.1/Dom-Scroll)
 - [x] Configure the baseUrl in the UI
-- [ ] Add documentation for the whole project
-    - [ ] Expose documentation for all modules in `elm-package.json`
-    - [ ] Generate documentation
-    - [ ] Write missing doc ;)
+- [x] Add documentation for the whole project
+    - [x] Expose documentation for all modules in `elm-package.json`
+    - [x] Generate documentation
+    - [x] Write missing doc ;)
     - [ ] Complete this README
