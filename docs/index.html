@@ -11643,7 +11643,7 @@ var _fmonniot$elm_docs_preview$Page_Context$pathToModule = function (m) {
 		'#',
 		A2(_fmonniot$elm_docs_preview$Utils_Path_ops['</>'], 'module', m));
 };
-var _fmonniot$elm_docs_preview$Page_Context$getDocs = A2(_elm_lang$http$Http$get, '/documentation.json', _fmonniot$elm_docs_preview$Docs_Package$decodePackage);
+var _fmonniot$elm_docs_preview$Page_Context$getDocs = A2(_elm_lang$http$Http$get, '/oauth-device-flow-simulator/docs/documentation.json', _fmonniot$elm_docs_preview$Docs_Package$decodePackage);
 var _fmonniot$elm_docs_preview$Page_Context$getReadme = function (context) {
 	return _elm_lang$http$Http$getString(
 		A2(
@@ -13704,7 +13704,7 @@ var _fmonniot$elm_docs_preview$Reactor$LoadElmPackage = function (a) {
 var _fmonniot$elm_docs_preview$Reactor$loadElmPackage = A2(
 	_elm_lang$http$Http$send,
 	_fmonniot$elm_docs_preview$Reactor$LoadElmPackage,
-	A2(_elm_lang$http$Http$get, '/elm-package.json', _fmonniot$elm_docs_preview$Page_Context$decodeElmPackage));
+	A2(_elm_lang$http$Http$get, '/oauth-device-flow-simulator/docs//elm-package.json', _fmonniot$elm_docs_preview$Page_Context$decodeElmPackage));
 var _fmonniot$elm_docs_preview$Reactor$init = function (loc) {
 	var route = A2(
 		_elm_lang$core$Maybe$withDefault,
